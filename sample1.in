@@ -1,0 +1,16 @@
+Resistance per unit length (ohm/um): 2
+Capacitance per unit length (F/um): 1
+Sink node capacitance (F): 1
+Buffer output resistance (ohm): 2
+Sinkcount: 4
+Nodecount: 7
+
+%thisnode  parnode  lcnode  rcnode  length(um)  xloc(um)  yloc(um)
+
+1 5 -1 -1 10 29322.000000 41420.000000
+2 5 -1 -1 5 26208.000000 51579.000000
+3 6 -1 -1 35 35565.000000 61661.000000
+4 6 -1 -1 20 36852.000000 64281.000000
+5 7 1 2 5 33416.000000 62525.000000
+6 7 3 4 20 36915.000000 67124.000000
+7 -1 5 6 -1 32275.000000 58078.000000
