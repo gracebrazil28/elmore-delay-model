@@ -129,34 +129,32 @@ foreach my $k (0.. $node_count[$file_no]-1) {
   print " Edge Capacitance \n";
   print Dumper (@edge_Cap); 
        
-   #TODO: calculate downstream capacitance for each node
    
    #TODO: calculate the capacitance for each node
    @node_cap;
-   @node_res;
    
    foreach my $node (@node_array){
    
    #if not the root node, add half of its edge capacitance to its parent
    if ($node->{'1'} != -1){
-      	print " Adding to the parent first .... \n";
-   		print "i = $node->{'0'} Cei = $edge_Cap[$node->{'0'}-1]\n";
-   		print "This node's parent is: $node->{'1'}\n";
+      	#print " Adding to the parent first .... \n";
+   		#print "i = $node->{'0'} Cei = $edge_Cap[$node->{'0'}-1]\n";
+   		#print "This node's parent is: $node->{'1'}\n";
    		$node_cap[$node->{'1'}-1] += $edge_Cap[$node->{'0'}-1]/2;
-   		print Dumper (@node_cap);
+   		#print Dumper (@node_cap);
    		
    		print " Adding to to its own .... \n";
    		#add own edge capacitance (halved)
-        print "i = $node->{'0'} Cei = $edge_Cap[$node->{'0'}-1] C_sink= $cap_sink[$file_no]\n";
+        #print "i = $node->{'0'} Cei = $edge_Cap[$node->{'0'}-1] C_sink= $cap_sink[$file_no]\n";
    		$node_cap[$node->{'0'}-1] += $edge_Cap[$node->{'0'}-1]/2;
-   		print Dumper (@node_cap);
+   		#print Dumper (@node_cap);
    		
-   		print " Adding sink cap if this is a sink .... \n";
+   		#print " Adding sink cap if this is a sink .... \n";
    		#check if this is a sink, add sink capacitance
    		if ( ($node->{'2'} == -1) & ($node->{'3'} == -1) ){
    		$node_cap[$node->{'0'}-1] += $cap_sink[$file_no];
   		}
-  		print "Final Node capacitance: $node_cap[$node->{'0'}-1] \n";
+  		#print "Final Node capacitance: $node_cap[$node->{'0'}-1] \n";
    }
    
    else {
@@ -166,13 +164,72 @@ foreach my $k (0.. $node_count[$file_no]-1) {
     print "i = $node->{'0'}\n";
    	print "Final Node capacitance: $node_cap[$node->{'0'}-1] \n";
    }
+
+} # end going through the node_array from parsed input file
+
+	print "Printing Node capacitance array: \n";
+    print Dumper (@node_cap);
+    
+   # To calculate delay, we need to create an array that adds all the downstream capacitance
+   # This is to make the delay calculation easier
+   @downstream_cap;
    
-
-}
-
+   foreach my $node (@node_array){
+   # adding the node capacitance here will be a BOTTOM-UP approach since the higher we are
+   # in the binary tree, the more downstream capacitance it will have
+   
+   if ( $node->{'1'} != -1 ){
+    $downstream_cap[$node->{'0'}-1]+= $node_cap[$node->{'0'}-1]; 
+    # add this to its parent's downstream cap
+    $downstream_cap[$node->{'1'}-1] += $downstream_cap[$node->{'0'}-1];
+    }
+   
+   else {
+   # if we get here, that means this is the root node
+   print "We got to the root node, the sum of its downstream capacitance are already here\n";
+   }   
+ } #end foreach calculation for downstream cap
+ 
+ print Dumper (@downstream_cap);
+    
+   
+   # Create another for each loop since we want the node_cap (c' from the pdf) to be calculated
+   # completely otherwise the computation will be incomplete
+    @delay_array;
 
    # TODO: Now Calculate the Delay for all the nodes
-   #
+   # ENABLE THIS LOOP AFTER CALCULATING THE DOWNSTREAM CAPACITANCES OF EACH NODE
+   
+   foreach my $node (@node_array) {
+
+   # check for the root node (top-down approach) 
+   # also because calculating for the delay for the root is different (buffer resistance is considered)
+   if ( $node->{'1'} == -1 ) {
+   	#this is the root node, calculate for delay
+   	$delay_array[$node->{'0'}-1] =  $res_buffer[$file_no] * $downstream_cap[$node->{'0'}-1];
+   	#add this delay to its children
+   	print "This node's children is $node->{'2'} and $node->{'3'} and the $delay_array[$node->{'0'}-1] delay will be added\n";
+   	#add this delay to left_child
+   	$delay_array[$node->{'2'}-1] += $delay_array[$node->{'0'}-1];
+   	#add this delay to right_child
+   	$delay_array[$node->{'3'}-1] += $delay_array[$node->{'0'}-1];
+   	#print the current delay array for checking
+   	print Dumper (@delay_array);  	
+   }
+
+	#DISABLE THIS BLOCK OF CODE FOR NOW
+	
+#	else {
+#	# this means that this is not the root node, begin normal calculations
+#	# calculate the node's own delay = edge_red * downstream caps
+# 	$delay_array[$node->{'0'}-1] += $edge_Res[$node->{'0'}-1] * $downstream_cap[$node->{'0'}-1];
+# 	# add this delay to its left and right child
+#    $delay_array[$node->{'2'}-1] += $delay_array[$node->{'0'}-1];
+#    $delay_array[$node->{'3'}-1] += $delay_array[$node->{'0'}-1];
+#	}   
+
+   
+  } #end foreach loop
    
    
    
@@ -181,7 +238,12 @@ foreach my $k (0.. $node_count[$file_no]-1) {
 
    #  Delay is computed by rd (buffer resistance)* c_prime + Re * c_prime
    #  t_root = buffer_res * (all downstream node_cap)
-   # t_child_of_root = t_root + Re_root * (all downstream node_cap)
+   #  t_child_of_root = t_root + Re_root * (total node_cap)
+   #  t_child_of_child = t_child_of_root + Re_child_of_root * (total node_cap)
+   #  root node will have less delay, the further down it is in the binary tree,
+   #  the more delay it will have
+   #  PLAN: for nodes in between (neither sink or root) it will get the delay of it's parent
+   #   plus its 
    
    ############ --------                  *                -------- ############   
    
@@ -193,8 +255,8 @@ foreach my $k (0.. $node_count[$file_no]-1) {
    
    $file_no += 1;
    
-   
-    #Create Output File(cut information)
+
+    #TODO: Create Output File: delay (max and min), and skew information
     open my $finaloutput, '>', $outputname.'.out';
     # provide the cut of the partitioning
     print {$finaloutput} "file name, min delay, max delay, skew" . "\n";
