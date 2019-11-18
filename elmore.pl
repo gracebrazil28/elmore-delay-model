@@ -195,7 +195,9 @@ foreach my $k (0.. $node_count[$file_no]-1) {
    
    # Create another for each loop since we want the node_cap (c' from the pdf) to be calculated
    # completely otherwise the computation will be incomplete
-    @delay_array;
+    @delay_array=  map {0} (1.. $sink_count[$file_no]);
+    print "about to print inital @delay_array\n";
+    print Dumper (@delay_array);
 
    # TODO: Now Calculate the Delay for all the nodes
    # ENABLE THIS LOOP AFTER CALCULATING THE DOWNSTREAM CAPACITANCES OF EACH NODE
@@ -205,7 +207,7 @@ foreach my $k (0.. $node_count[$file_no]-1) {
    # check for the root node (top-down approach) 
    # also because calculating for the delay for the root is different (buffer resistance is considered)
    if ( $node->{'1'} == -1 ) {
-   	#this is the root node, calculate for delay
+   	#this is the root node, calculate for delay (node 7 for first example)
    	$delay_array[$node->{'0'}-1] =  $res_buffer[$file_no] * $downstream_cap[$node->{'0'}-1];
    	#add this delay to its children
    	print "This node's children is $node->{'2'} and $node->{'3'} and the $delay_array[$node->{'0'}-1] delay will be added\n";
@@ -219,14 +221,16 @@ foreach my $k (0.. $node_count[$file_no]-1) {
 
 	#DISABLE THIS BLOCK OF CODE FOR NOW
 	
-#	else {
-#	# this means that this is not the root node, begin normal calculations
-#	# calculate the node's own delay = edge_red * downstream caps
-# 	$delay_array[$node->{'0'}-1] += $edge_Res[$node->{'0'}-1] * $downstream_cap[$node->{'0'}-1];
-# 	# add this delay to its left and right child
-#    $delay_array[$node->{'2'}-1] += $delay_array[$node->{'0'}-1];
-#    $delay_array[$node->{'3'}-1] += $delay_array[$node->{'0'}-1];
-#	}   
+	else {
+	# this means that this is not the root node, begin normal calculations
+	# calculate the node's own delay = edge_red * downstream caps
+ 	print "$node->{'0'}-1\n";
+ 	$delay_array[$node->{'0'}-1] += $edge_Res[$node->{'0'}-1] * $downstream_cap[$node->{'0'}-1];
+ 	print "printing the delay to be added to its children: $delay_array[$node->{'0'}-1]\n";
+ 	# add this delay to its left and right child
+    $delay_array[$node->{'2'}-1] += $delay_array[$node->{'0'}-1];
+    $delay_array[$node->{'3'}-1] += $delay_array[$node->{'0'}-1];
+	}   
 
    
   } #end foreach loop
