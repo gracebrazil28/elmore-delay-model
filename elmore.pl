@@ -20,21 +20,10 @@ use List::MoreUtils qw(first_index);
 ########                                         ##########
  
 
-#Ask user to give the location of the input file folder
-#print "Give the input folder's path name (ex: '/Users/Desktop/in')\n>> ";
-#my $dir = <STDIN>;
-#chomp $dir;
-
-#my own directory for testing purposes only
-my $dir = "/Users/preciousbrazil/Desktop/Sandbox/in";
-
-
-opendir(DIR, $dir) or die "Could not open '$dir'! Try again!\n";
-$num_files = () = readdir(DIR);
-$file_no = 0;
-
-#go through all the files within the input folder
-foreach my $file (glob("$dir/*")) {
+#Ask user to give the location of the path of the input file
+print "Give the file's exact path (ex: '/Users/Desktop/in/r1_top.txt')\n>> ";
+my $file = <STDIN>;
+chomp $file;
 
   open my $filename, "<", $file or die "can't open '$file'\n";
   my $lineNum=0;
@@ -132,7 +121,7 @@ foreach my $k (0.. $node_count[$file_no]-1) {
        
    
    #TODO: calculate the capacitance for each node
-   @node_cap;
+   #@node_cap;
    
    foreach my $node (@node_array){
    
@@ -173,7 +162,7 @@ foreach my $k (0.. $node_count[$file_no]-1) {
     
    # To calculate delay, we need to create an array that adds all the downstream capacitance
    # This is to make the delay calculation easier
-   @downstream_cap;
+   #@downstream_cap;
    
    foreach my $node (@node_array){
    # adding the node capacitance here will be a BOTTOM-UP approach since the higher we are
@@ -270,14 +259,6 @@ foreach my $k (0.. $node_count[$file_no]-1) {
    #Let me know when EOF is reached
    print "File Ended. . . . .\n";
    close($filename);
-   
-   $file_no += 1;
-   
-   
-} #close foreach file
-
-closedir(DIR);
- 
 
 sub findParent {
  my ($thisnode) = @_;
