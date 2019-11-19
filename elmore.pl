@@ -12,6 +12,7 @@ use utf8;
 use File::Basename;
 use Data::Dumper qw(Dumper);
 use List::Util qw( min max );
+use List::MoreUtils qw( minmax );
 use List::MoreUtils qw(first_index);
 
 ########                                         ##########
@@ -250,10 +251,17 @@ foreach my $k (0.. $node_count[$file_no]-1) {
 	
 	   
    #CALCULATE CLOCK SKEW: largest difference between the arrival time of the clock signal between a pair of clock sinks
-   
-
-   
-   
+   #save all the sink delays
+	foreach my $node (@node_array) {
+	if ( ($node->{'2'} == -1) & ($node->{'3'} == -1) ) {
+		push (@sinks, $delay_node[$node->{'0'}-1]);
+		}
+	}
+	print Dumper (@sinks);
+   #save max, save min, calculate the difference
+   ($min, $max) = minmax @sinks;
+   $max_skew = $max-$min;
+   print "Max skew is $max_skew\n";
    
    #Let me know when EOF is reached
    print "File Ended. . . . .\n";
