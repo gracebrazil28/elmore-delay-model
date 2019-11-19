@@ -177,6 +177,8 @@ foreach my $k (0.. $node_count[$file_no]-1) {
    else {
    # if we get here, that means this is the root node
    print "We got to the root node, the sum of its downstream capacitance are already here\n";
+   # add its own node capacitance here
+   $downstream_cap[$node->{'0'}-1]+= $node_cap[$node->{'0'}-1]; 
    }   
  } #end foreach calculation for downstream cap
  
