@@ -111,7 +111,7 @@ foreach my $file (glob("$dir/*")) {
   #print "*********** Printing the expected node array\n";
   ## @node_array 0-> node, 1-> parent_node, 2-> left_child, 3->right_child, 4-> length
   print Dumper (@node_array);
-  print "Accessing node 1's parents node: $node_array[0]->{'1'}\n";
+  #print "Accessing node 1's parents node: $node_array[0]->{'1'}\n";
       
       
   ### Parsing done - START Calculation of Elmore Delay ###    
@@ -192,64 +192,66 @@ foreach my $k (0.. $node_count[$file_no]-1) {
  
  print Dumper (@downstream_cap);
     
-   
-   # Create another for each loop since we want the node_cap (c' from the pdf) to be calculated
-   # completely otherwise the computation will be incomplete
-    @delay_array=  map {0} (1.. $sink_count[$file_no]);
-    print "about to print inital @delay_array\n";
-    print Dumper (@delay_array);
 
-   # TODO: Now Calculate the Delay for all the nodes
+    @delay_node=  map {0} (1.. $node_count[$file_no]);
+    print "about to print inital contents of delay array: @delay_node\n";
    # ENABLE THIS LOOP AFTER CALCULATING THE DOWNSTREAM CAPACITANCES OF EACH NODE
-   
+     
    foreach my $node (@node_array) {
-
-   # check for the root node (top-down approach) 
    # also because calculating for the delay for the root is different (buffer resistance is considered)
    if ( $node->{'1'} == -1 ) {
-   	#this is the root node, calculate for delay (node 7 for first example)
-   	$delay_array[$node->{'0'}-1] =  $res_buffer[$file_no] * $downstream_cap[$node->{'0'}-1];
-   	#add this delay to its children
-   	print "This node's children is $node->{'2'} and $node->{'3'} and the $delay_array[$node->{'0'}-1] delay will be added\n";
-   	#add this delay to left_child
-   	$delay_array[$node->{'2'}-1] += $delay_array[$node->{'0'}-1];
-   	#add this delay to right_child
-   	$delay_array[$node->{'3'}-1] += $delay_array[$node->{'0'}-1];
-   	#print the current delay array for checking
-   	print Dumper (@delay_array);  	
-   }
-
-	#DISABLE THIS BLOCK OF CODE FOR NOW
-	
+   	#this is the root node, calculate for delay 
+   	$delay_node[$node->{'0'}-1] =  $res_buffer[$file_no] * $downstream_cap[$node->{'0'}-1]; 	
+   }	
 	else {
 	# this means that this is not the root node, begin normal calculations
 	# calculate the node's own delay = edge_red * downstream caps
- 	print "$node->{'0'}-1\n";
- 	$delay_array[$node->{'0'}-1] += $edge_Res[$node->{'0'}-1] * $downstream_cap[$node->{'0'}-1];
- 	print "printing the delay to be added to its children: $delay_array[$node->{'0'}-1]\n";
- 	# add this delay to its left and right child
-    $delay_array[$node->{'2'}-1] += $delay_array[$node->{'0'}-1];
-    $delay_array[$node->{'3'}-1] += $delay_array[$node->{'0'}-1];
-	}   
-
-   
+ 	$delay_node[$node->{'0'}-1] += $edge_Res[$node->{'0'}-1] * $downstream_cap[$node->{'0'}-1];
+	}     
   } #end foreach loop
-   
-   
-   
-   ############ --------                  *                -------- ############
-   # NOTES:
+  
+  print Dumper (@delay_node);
+  
+  # After calculating each node's delay, we can start accumulating delays per node
+  
+  	foreach my $node (@node_array) {
+  	
+  	$this_node = $node->{'0'};
+  	print "this node is $this_node\n";
+  	
+  	# check this current node's parent
+  	$par_node = &findParent ($this_node);
+  	print "this current node's parent is: $par_node\n";
+  	  	if ($par_node == -1) {
+  	  	goto OUT;
+  	}
+  	
+  	
+  	#add the parent's delay to this node's delay
+  	$delay_node[$this_node-1] += $delay_node[$par_node-1];
+  	#print Dumper (@delay_node);
+  	
+  	
+  	$par2_node = 0;
+	while ($par2_node != -1){
+		$par2_node = &findParent($par_node);
+		print "has another parent: $par2_node\n";
+		if ($par2_node != -1) {
+			$delay_node[$this_node-1] += $delay_node[$par2_node-1];
+			#print Dumper (@delay_node);
+			}
+		}
 
-   #  Delay is computed by rd (buffer resistance)* c_prime + Re * c_prime
-   #  t_root = buffer_res * (all downstream node_cap)
-   #  t_child_of_root = t_root + Re_root * (total node_cap)
-   #  t_child_of_child = t_child_of_root + Re_child_of_root * (total node_cap)
-   #  root node will have less delay, the further down it is in the binary tree,
-   #  the more delay it will have
-   #  PLAN: for nodes in between (neither sink or root) it will get the delay of it's parent
-   #   plus its 
+	OUT:
+  	}
+  	
+  	print "final delay array... \n";
+  	print Dumper (@delay_node);
+	
+	   
+   #CALCULATE CLOCK SKEW: largest difference between the arrival time of the clock signal between a pair of clock sinks
    
-   ############ --------                  *                -------- ############   
+
    
    
    
@@ -278,3 +280,10 @@ foreach my $k (0.. $node_count[$file_no]-1) {
    
 } #close foreach file
 
+
+sub findParent {
+ my ($thisnode) = @_;
+ $par_node = $node_array[$thisnode-1]->{'1'};
+ #print "found its parent! it is $par_node\n";
+ return $par_node;
+}
