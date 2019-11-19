@@ -30,7 +30,7 @@ my $dir = "/Users/preciousbrazil/Desktop/Sandbox/in";
 
 
 opendir(DIR, $dir) or die "Could not open '$dir'! Try again!\n";
-#$num_files = () = readdir(DIR);
+$num_files = () = readdir(DIR);
 $file_no = 0;
 
 #go through all the files within the input folder
@@ -261,7 +261,11 @@ foreach my $k (0.. $node_count[$file_no]-1) {
    #save max, save min, calculate the difference
    ($min, $max) = minmax @sinks;
    $max_skew = $max-$min;
+   print "Min delay is $min\n";
+   print "Max delay is $max\n";
    print "Max skew is $max_skew\n";
+   
+   
    
    #Let me know when EOF is reached
    print "File Ended. . . . .\n";
@@ -269,25 +273,11 @@ foreach my $k (0.. $node_count[$file_no]-1) {
    
    $file_no += 1;
    
-
-    #TODO: Create Output File: delay (max and min), and skew information
-    open my $finaloutput, '>', $outputname.'.out';
-    # provide the cut of the partitioning
-    print {$finaloutput} "file name, min delay, max delay, skew" . "\n";
-    foreach my $item (@partition){
-    	print {$finaloutput} " $ouputname, min, max, skew" . "\n";
-    }
-    close $finaloutput;
- 
-   
-    #print "\n\n*************************************************************\n\n";
-    #print " > >  Check directory for the output files produced   < < ";
-    #print "\n\n*************************************************************\n\n";  
-
-   
    
 } #close foreach file
 
+closedir(DIR);
+ 
 
 sub findParent {
  my ($thisnode) = @_;
