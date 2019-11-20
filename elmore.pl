@@ -79,7 +79,7 @@ chomp $file;
          push @node_array, $array_ref;
 
          $j += 1;
-        print "Line finished reading\n";    
+        #print "Line finished reading\n";    
         
         } #close reading body statement   
     
@@ -100,7 +100,7 @@ chomp $file;
   #print Dumper (@node_count);
   #print "*********** Printing the expected node array\n";
   ## @node_array 0-> node, 1-> parent_node, 2-> left_child, 3->right_child, 4-> length
-  print Dumper (@node_array);
+  #print Dumper (@node_array);
   #print "Accessing node 1's parents node: $node_array[0]->{'1'}\n";
       
       
@@ -114,13 +114,13 @@ foreach my $k (0.. $node_count[$file_no]-1) {
    	push @edge_Cap, $current_Ce;
   }
   #Print Arrays for Testing Purposes
-  print " Edge Resistance \n";
-  print Dumper (@edge_Res);
-  print " Edge Capacitance \n";
-  print Dumper (@edge_Cap); 
+  #print " Edge Resistance \n";
+  #print Dumper (@edge_Res);
+  #print " Edge Capacitance \n";
+  #print Dumper (@edge_Cap); 
        
    
-   #TODO: calculate the capacitance for each node
+   #Calculate the capacitance for each node
    #@node_cap;
    
    foreach my $node (@node_array){
@@ -157,7 +157,7 @@ foreach my $k (0.. $node_count[$file_no]-1) {
 
 } # end going through the node_array from parsed input file
 
-	print "Printing Node capacitance array: \n";
+    print "Printing Node capacitance array: \n";
     print Dumper (@node_cap);
     
    # To calculate delay, we need to create an array that adds all the downstream capacitance
@@ -182,12 +182,12 @@ foreach my $k (0.. $node_count[$file_no]-1) {
    }   
  } #end foreach calculation for downstream cap
  
+ print "Printing downstream Capacitance array: \n";
  print Dumper (@downstream_cap);
     
-
+    #Ccreating an array that will calculate each node's own delay contribution
     @delay_node=  map {0} (1.. $node_count[$file_no]);
-    print "about to print inital contents of delay array: @delay_node\n";
-   # ENABLE THIS LOOP AFTER CALCULATING THE DOWNSTREAM CAPACITANCES OF EACH NODE
+    #print "about to print inital contents of delay array: @delay_node\n";
      
    foreach my $node (@node_array) {
    # also because calculating for the delay for the root is different (buffer resistance is considered)
@@ -202,53 +202,54 @@ foreach my $k (0.. $node_count[$file_no]-1) {
 	}     
   } #end foreach loop
   
+  print "Printing Delay Node array: \n";
   print Dumper (@delay_node);
   
+
   # After calculating each node's delay, we can start accumulating delays per node
+  # Copy the content of the delay_node so we do not have to add its own delay contribution, just the delay from its parents
+  @final_delay=  @delay_node;
   
-  	foreach my $node (@node_array) {
-  	
+  	foreach my $node (@node_array) { 	
   	$this_node = $node->{'0'};
-  	print "this node is $this_node\n";
+  	#print "this node is $this_node\n";
   	
   	# check this current node's parent
   	$par_node = &findParent ($this_node);
-  	print "this current node's parent is: $par_node\n";
+  	#print "this current node's parent is: $par_node\n";
   	  	if ($par_node == -1) {
   	  	goto OUT;
   	}
-  	
-  	
+  		
   	#add the parent's delay to this node's delay
-  	$delay_node[$this_node-1] += $delay_node[$par_node-1];
-  	#print Dumper (@delay_node);
+  	$final_delay[$this_node-1] += $delay_node[$par_node-1];
   	
-  	
+	#find par_node's parent recursively until we get to the root node
   	$par2_node = 0;
 	while ($par2_node != -1){
 		$par2_node = &findParent($par_node);
-		print "has another parent: $par2_node\n";
+		#print "has another parent: $par2_node\n";
 		if ($par2_node != -1) {
-			$delay_node[$this_node-1] += $delay_node[$par2_node-1];
-			#print Dumper (@delay_node);
+			$final_delay[$this_node-1] += $delay_node[$par2_node-1];
 			}
 		}
 
 	OUT:
   	}
   	
-  	print "final delay array... \n";
-  	print Dumper (@delay_node);
+  	print "Final Delay Array... \n";
+  	print Dumper (@final_delay);
 	
 	   
    #CALCULATE CLOCK SKEW: largest difference between the arrival time of the clock signal between a pair of clock sinks
    #save all the sink delays
 	foreach my $node (@node_array) {
 	if ( ($node->{'2'} == -1) & ($node->{'3'} == -1) ) {
-		push (@sinks, $delay_node[$node->{'0'}-1]);
+		push (@sinks, $final_delay[$node->{'0'}-1]);
 		}
 	}
-	print Dumper (@sinks);
+	#print Dumper (@sinks);
+	
    #save max, save min, calculate the difference
    ($min, $max) = minmax @sinks;
    $max_skew = $max-$min;
