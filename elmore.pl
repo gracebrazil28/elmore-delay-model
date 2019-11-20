@@ -162,7 +162,7 @@ foreach my $k (0.. $node_count[$file_no]-1) {
     
    # To calculate delay, we need to create an array that adds all the downstream capacitance
    # This is to make the delay calculation easier
-   #@downstream_cap;
+   @downstream_cap;
    
    foreach my $node (@node_array){
    # adding the node capacitance here will be a BOTTOM-UP approach since the higher we are
