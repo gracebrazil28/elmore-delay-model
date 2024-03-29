@@ -98,4 +98,5 @@ Step 5: Calculate accumulated delay
 
 This can be done by creating a new array to store final delay. The node delay can be copied so that its own node delay contribution doeds not have to be added. What is left for the delay calculation is adding the parent’s delay to this node. Create a recursive function that grabs the parent’s delay contribution and sums it with this node’s delay. Stay in this loop to find the previous parent’s parent until we reach the root node. 
 
+Blog Post: https://gracebrazilprojects.wordpress.com/2019/12/06/elmore-delay-model-for-timing-delay-algorithm/
 
